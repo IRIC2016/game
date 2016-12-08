@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>飞机大战9.1</title>
+	<style type="text/css">
+		*{
+			margin:0px;
+			padding:0px;
+		}
+		body{
+			background:#000;
+		}
+		#box{
+			width:300px;
+			height:500px;
+			border:10px solid #fff;
+			margin:50px auto 0;
+			position:relative;
+			font-family:'Microsoft yahei';
+		}
+		#box .plane{
+			position:absolute;
+		}
+		#box .bullet{
+			position:absolute;
+		}
+		#box .enemy{
+			position:absolute;
+		}
+		#box .over{
+			width:200px;
+			height:300px;
+			background-color:#fff;
+			color:#000;
+			margin: 60px auto;
+			position:relative;
+
+		}
+		#box .over .span{
+			width:100%;
+			position:absolute;
+			font-size:30px;
+			margin-top:50px;
+			color:#000;
+			text-align:center;
+		}
+		#box .over .span2{
+			width:100%;
+			position:absolute;
+			font-size:20px;
+			margin-top:100px;
+			color:#000;
+			text-align:center;
+		}
+		#box .over .btn{
+			position:absolute;
+			top:150px;
+			left:26px;
+			width:150px;
+			height:40px;
+			font-size:20px;
+			color:#000;
+			border:1px solid #ddd;
+			cursor:pointer;
+		}
+		#box .score{
+			position:absolute;
+			font-size:14px;
+			color:#fff;
+			margin-top:10px;
+			margin-left:10px;
+		}
+		#box .title{
+			font-size:28px;
+			font-weight:normal;
+			text-align:center;
+			margin-top:20px;
+			color:#fff;
+		}
+		#box .diff{
+			width:150px;
+			height:30px;
+			line-height:30px;
+			background:#fff;
+			margin:60px auto;
+			text-align:center;
+			cursor:pointer;
+		}
+		#box .diyu{
+			background:#6ff;
+			color:#ec4913;
+		}
+		#box .diff:hover{
+			background:pink;
+			color:#fff;
+		}
+	</style>
+	<script type="text/javascript" src=''></script>
+</head>
+<body>
+	<div id="box"></div>
+	<script type="text/javascript">
+		(function(){
+			var oBox = document.getElementById("box");
+				//box到页面的距离
+				var bLeft = oBox.offsetLeft;
+				var bTop = oBox.offsetTop;
+				//调整宽度  自适应
+				window.onresize = function(){
+					bLeft = oBox.offsetLeft;
+					bTop = oBox.offsetTop;
+				};
+			init();	
+			//初始化
+			function init(){
+				var oH = document.createElement('h1');	
+					oH.className = 'title';
+					oH.innerHTML = '飞机大战9.1';
+				oBox.appendChild(oH);
+	 			for(var i=0;i<4;i++){
+	 				var oP = document.createElement('p');
+	 					oP.className = 'diff';
+	 					oP.index = i;
+	 				var html = '';
+	 				switch( i ){
+	 					case 0:
+	 					html = '简单难度';
+	 					oP.bSpeed = 100 ;
+	 					break;
+	 					case 1:
+	 					html = '中等难度';
+	 					oP.bSpeed = 200 ;
+	 					break;
+	 					case 2:
+	 					html = '困难难度';
+	 					oP.bSpeed = 250 ;
+	 					break;
+	 					case 3:
+	 					html = '地狱难度';
+	 					oP.bSpeed = 50 ;
+	 					oP.className += ' diyu';
+	 					break;
+	 				}
+
+ 					oP.innerHTML = html;
+ 				oBox.appendChild(oP);
+
+
+ 				oP.onclick = function(e){
+ 					e=e||event;
+ 					startGame(e,this.bSpeed,this.index);
+ 					}
+	 			}
+			};
+
+			function startGame(e,bSpeed,index){	
+				oBox.innerHTML = '';
+				var score = 0;
+			//计分器
+				oS = document.createElement("p");
+				oS.className = 'score';
+				oBox.appendChild(oS);
+
+			//生产飞机
+			var oPlane = document.createElement("img");
+				oPlane.className = "plane";
+				oPlane.src = "img/plane.png";
+				oPlane.width = 60;
+				oPlane.height = 36;
+			oBox.appendChild(oPlane);
+			//飞机宽高 已经用oPlane.width = 60;oPlane.height = 36;代替了	
+			/*var pWidth,pHeight
+			oPlane.onload = function(){
+				var pWidth = oPlane.clientWidth;
+				var pHeight = oPlane.clientHeight;
+			}*/
+			
+			//鼠标移动      
+			var	leftMin = -oPlane.width/2,//2鼠标移动飞机的范围限制
+				leftMax = parseFloat( getStyle(oBox,'width') )-oPlane.width/2,
+	
+				topMin = 0,
+				topMax = parseFloat( getStyle(oBox,'height') )-oPlane.height;
+/*parseFloat()方法可以解析一个字符串，并返回一个浮点数。
+注:如果字符串中的第一个字符不能够转换成数字，此方法返回NaN。如果字符串中含有多个数字，但只会返回第一个数字。
+getStyle是一个function，有两个参数,一个是dom节点，是一个style的属性名，找个getStyle的作用应该是获取这个dom的对应的style的样式，如 <div id="test" style="width:100px"/> 你这个时候调用找个getStyle，如果attr传的参数是width，就会得到100*/				
+			document.onmousemove = function(e){//1鼠标移动 
+					e=e||event;
+					var left = e.pageX - bLeft - 10 - oPlane.width/2;
+					var top = e.pageY - bTop - 10 - oPlane.height/2;
+//鼠标在盒子外面移动 限制飞机移出盒子  达到鼠标在盒子外 照样可以操作飞机
+					left = Math.max(leftMin,left);//当鼠标超出盒子oBox左边时 取大值left 因为left>leftMin(它就是指鼠标在盒子左边时的值) 
+					left = Math.min(leftMax,left);//同理 右边取最小值left
+
+					top = Math.max(topMin,top);
+					top = Math.min(topMax,top);
+
+					oPlane.style.left = left + "px";
+					oPlane.style.top = top + "px";
+				};
+
+				//我军发射子弹
+					var bTimer = setInterval(function(){
+						var oBullet = new Image();
+							oBullet.className = 'bullet';
+							oBullet.src = 'img/bullet.png';
+							oBullet.width = 6;
+							oBullet.height = 22;
+							oBullet.style.left = oPlane.offsetLeft + oPlane.width/2 - oBullet.width/2 + 'px';
+							oBullet.style.top = oPlane.offsetTop - oBullet.height + 'px';
+						oBox.appendChild( oBullet );
+						var timer = setInterval(function(){
+							oBullet.style.top = oBullet.offsetTop - 5 + 'px';//5表示子弹下落速度
+							if ( oBullet.offsetTop <= -oBullet.height )
+							{
+								clearInterval( timer );
+								oBox.removeChild( oBullet );
+							}
+							if ( !oBullet.parentNode )
+							{
+								clearInterval( timer );
+							}
+						},13);
+					},bSpeed);
+					
+				var sc,xl;//sc飞机生产速度  xl敌机下路速度
+					switch ( index )
+					{
+						case 0:
+							sc = 600;
+							xl = 2;
+							break;
+						case 1:
+							sc = 400;
+							xl = 4;
+							break;
+						case 2:
+							sc = 200;
+							xl = 6;
+							break;
+						case 3:
+							sc = 150;
+							xl = 8;
+							break;
+					}
+				//生产敌机
+				var eTimer = setInterval(function(){
+					var oEnemy = new Image();
+						oEnemy.className = 'enemy';
+						oEnemy.src = 'img/enemy.png';
+						oEnemy.width = 23;
+						oEnemy.height = 30;
+						oEnemy.style.left = Math.random()*parseInt(getStyle(oBox,'width'))-oEnemy.width/2+ "px";
+						oBox.appendChild(oEnemy);
+						var a = Math.random()*(xl-1)+1
+						var timer = setInterval(function(){
+							oEnemy.style.top = oEnemy.offsetTop+a+'px';
+							if ( oEnemy.offsetTop >= parseInt(getStyle(oBox,'height')) )
+							{
+								clearInterval(timer);
+								oBox.removeChild(oEnemy);
+							}
+						},13)
+
+				var pzTimer = setInterval(function(){
+							if ( pz( oEnemy , oPlane ) && /plane/.test(oPlane.src) )//并且假设飞机oPlane.src还存在，才执行下面代码//plane/是你定义的正则里面的内容,然后和oPlane.src的内容对比，test返回true或者false
+							{
+								oPlane.src = 'img/boom2.png';
+								oEnemy.src = 'img/boom.png';
+								document.onmousemove = null;
+								clearInterval( bTimer );
+								clearInterval( eTimer );
+								clearInterval( pzTimer );
+								clearInterval( timer );
+								setTimeout(function(){
+									GameOver( score );
+								},1000);
+							};
+							
+							var allBiu = getClass('bullet');
+							for (var i=0;i<allBiu.length;i++ )
+							{
+								if ( pz( oEnemy , allBiu[i] ) )
+								{
+									oEnemy.src = 'img/boom.png';
+									clearInterval( pzTimer );
+									clearInterval( timer );
+									score += 100;
+									oS.innerHTML = score;
+									allBiu[i].parentNode.removeChild( allBiu[i] );
+									
+									setTimeout(function(){
+										if ( oEnemy.parentNode )
+										{
+
+											oBox.removeChild( oEnemy );
+
+										}
+									},500);
+								}
+							}
+						},13);
+						
+						
+					},sc);
+
+				};
+	
+			function GameOver(score){
+				oBox.innerHTML = '';
+				var oDiv = document.createElement('div');
+					oDiv.className = 'over';
+					oBox.appendChild(oDiv);
+				var oSpan = document.createElement('span');
+					oSpan.className = 'span';
+					oSpan.innerHTML = 'Game Over';
+					oDiv.appendChild(oSpan);
+				var oSpan2 = document.createElement('span');
+					oSpan2.className = 'span2';
+					oSpan2.innerHTML = '您的分数为：'+score;
+					oDiv.appendChild(oSpan2);
+				var oBtn = document.createElement('button');
+					oBtn.className = 'btn';
+					oDiv.appendChild(oBtn);
+					oBtn.innerHTML = 'Play again';
+					oBtn.onclick = function(){
+					oBox.innerHTML = '';	
+					init();	
+				}	
+				
+			}
+				//碰撞检测
+				function pz(obj1,obj2){
+					var T1 = obj1.offsetTop,
+						B1 = T1 + obj1.clientHeight,
+						L1 = obj1.offsetLeft,
+						R1 = L1 + obj1.clientWidth;
+
+					var T2 = obj2.offsetTop,
+						B2 = T2 + obj2.clientHeight,
+						L2 = obj2.offsetLeft,
+						R2 = L2 + obj2.clientWidth;	
+
+					if( R1 < L2 || B1 < T2 || L1 > R2 || T1 > B2)
+					{
+						return false;
+					}else{
+						return true;
+					}
+				};
+				//扩展方法 给parseFloat( getStyle(oBox,'height') )
+				function getStyle(obj,attr){
+					return obj.currentStyle?obj.currentStyle[attr]:getComputedStyle(obj)[attr];
+				}
+				//浏览器兼容
+				function getClass( cName , parent ){
+					parent = parent || document;
+					var arr = [];
+					if ( document.getElementsByClassName )
+					{
+						var a = parent.getElementsByClassName(cName);
+						for (var i=0;i<a.length;i++ )arr[i] = a[i];
+					}else
+					{
+						var allE = parent.getElementsByTagName('*');
+						for (var i=0;i<allE.length;i++ )
+						{
+							var arrC = allE[i].className.split(' ');
+							for (var j=0;j<arrC.length;j++ )
+							{
+								if ( arrC[j] == cName )
+								{
+									arr.push( allE[i] );
+									break;
+								}
+							}
+						}
+					}
+					return arr;
+				};
+		})();
+	</script>
+</body>
+</html>
